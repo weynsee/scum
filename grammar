@@ -1,30 +1,34 @@
 Context Free Grammar
 --------------------
 
-PROGRAM -> STMT_LIST FUNCTION_LIST
+PROGRAM -> STMT_LIST
 
-FUNCTION_LIST -> FUNC_DECL FUNCTION_LIST | FUNC_DECL
+VAR_DECL -> ‘def‘ ASSIGN_EXPR
+		| ‘def‘ VAR_NAME
 
-CONST_DECL_LIST -> CONST_DECL CONST_DECL_LIST | e
+ASSIGN_EXPR -> CONTAINS_VALUE ASSIGN_OPER YIELDS_VALUE
 
-CONST_DECL -> ‘const’ DATA_TYPE VAR_NAME ASSIGN_OPER VALUE ‘;’
+CONTAINS_VALUE -> VAR_NAME | INDEXED_VAR_NAME
 
-VAR_DECL -> DATA_TYPE VAR_NAME ASSIGN_OPER VALUE
-		| DATA_TYPE VAR_NAME
+INVOKABLE -> CONTAINS_VALUE | FUNC_CALL
 
-ASSIGN_EXPR -> VAR_NAME ASSIGN_OPER OPERATION ‘;’
-		| VAR_NAME ASSIGN_OPER OPERAND ‘;’
-		| VAR_NAME ASSIGN_OPER ARRAY_ASSIGN
+LIST_LITERAL -> ‘[’ LIST_ITEMS ‘]’
 
-ARRAY_ASSIGN -> ‘{’ ARRAY_ELEMENT ‘};’
+LIST_ITEMS -> LIST_ITEMS ‘,’ YIELDS_VALUE | YIELDS_VALUE | e
 
-ARRAY_ELEMENT -> ARRAY_ELEMENT ‘,’ OPERAND | OPERAND | e
+HASH_LITERAL -> ‘{’ HASH_ITEMS ‘}’
 
-ASSIGN_OPER -> ‘=’
+HASH_ITEMS -> HASH_ITEMS ‘,’ HASH_ITEM | HASH_ITEM | e
 
-IF_ELSE -> ‘if’ COND_STMT ‘{’ STMT_LIST ‘} else’ IF_ELSE
-		| ‘if’ COND_STMT ‘{’ STMT_LIST ‘} else’ STMT_LIST
-		| ‘if’ COND_STMT ‘{’ STMT_LIST ‘}’
+HASH_ITEM -> OPERATION ‘:‘ YIELDS_VALUE | OPERAND ‘:‘ YIELDS_VALUE
+
+YIELDS_VALUE -> OPERATION | OPERAND | LAMBDA
+
+ASSIGN_OPER -> ‘=’ | ‘+=‘ | ‘-=‘ | ‘/=‘ | ‘%=‘
+
+IF_ELSE -> ‘if’ COND_LIST ‘{’ STMT_LIST ‘} else’ IF_ELSE
+		| ‘if’ COND_LIST ‘{’ STMT_LIST ‘} else’ STMT_LIST
+		| ‘if’ COND_LIST ‘{’ STMT_LIST ‘}’
 
 COND_STMT -> ‘(’ COND_LIST ‘)’
 
@@ -50,58 +54,56 @@ STATEMENT ->  VAR_DECL
 		| IF_ELSE
 		| FOR_LOOP
 		| WHILE_LOOP
-		| DO_WHILE
 		| FUNC_CALL
 		| RETURN_STMT
+		| FUNC_DECL
 		| e
 
-FOR_LOOP -> ‘for( ’ ASSIGN_EXPR ‘;’ COND_LIST ‘;’ VAR_NAME ASSIGN_OPER OPERATION ‘){’ STMT_LIST ‘}’
+DECL_OR_ASSIGN = VAR_DECL | ASSIGN_EXPR
 
-WHILE_LOOP -> ‘while’ COND_STMT ‘{’ STMT_LIST ‘}’
+FOR_LOOP -> ‘for( ’ DECL_OR_ASSIGN ‘;’ COND_LIST ‘;’ VAR_NAME ASSIGN_OPER OPERATION ‘){’ STMT_LIST ‘}’
 
-DO_WHILE -> ‘do {’ STMT_LIST ‘} while’ COND_STMT ‘;’
+WHILE_LOOP -> ‘while’ COND_LIST ‘{’ STMT_LIST ‘}’
 
-FUNC_DECL -> RET_TYPE FUNC_NAME ‘(‘ FORMAL_PARAM_LIST ‘){’ STMT_LIST ‘}’
+FUNC_DECL -> ‘def‘ VAR_NAME ‘(‘ FORMAL_PARAM_LIST ‘){’ STMT_LIST ‘}’
 
-FUNC_CALL -> FUNC_NAME ‘(’ ACTUAL_PARAM_LIST ‘);’
-
-RET_TYPE -> DATA_TYPE | ‘void’
-
-FUNC_NAME -> LETTER | LETTER FUNC_NAME
+FUNC_CALL -> INVOKABLE ‘(’ ACTUAL_PARAM_LIST ‘)’
 
 FORMAL_PARAM_LIST -> FORMAL_PARAM ‘,’ FORMAL_PARAM_LIST | FORMAL_PARAM
 
-FORMAL_PARAM -> DATA_TYPE VAR_NAME | e
+FORMAL_PARAM -> VAR_NAME | e
 
-RETURN_STMT -> ‘return’ OPERATION ‘;’ | ‘return’ OPERAND ‘;’
+RETURN_STMT -> ‘return’ YIELDS_VALUE | ‘return’
 
 ACTUAL_PARAM_LIST -> ACTUAL_PARAM ‘,’ ACTUAL_PARAM_LIST | ACTUAL_PARAM
 
-ACTUAL_PARAM -> OPERATION | OPERAND | e
+ACTUAL_PARAM -> YIELDS_VALUE | e
 
 VAR_NAME -> LETTER | LETTER VAR_NAME
 
+INDEXED_VAR_NAME -> VAR_NAME ‘[’ YIELDS_VALUE ']'
+
 OPERATION -> OPERAND OPERATOR OPERATION 
-| ‘(‘ OPERATION ‘)’ OPERATOR OPERATION
+	| ‘(‘ OPERATION ‘)’ OPERATOR OPERATION
 
 OPERAND -> VALUE
-   | VAR_NAME
-   | ARR_VAR_NAME
-   | STRING
-   | FUNC_CALL
-   | CHARACTER
+   	| VAR_NAME
+   	| STRING
+	| FUNC_CALL
+	| LIST_LITERAL
+	| HASH_LITERAL
+	| LAMBDA_INVOKE
+	| INDEXED_VAR_NAME
 
-ARR_VAR_NAME -> VAR_NAME ‘[’ INTEGER ‘]’
+LAMBDA -> ‘lambda‘ ‘(‘ FORMAL_PARAM_LIST ‘){’ STMT_LIST ‘}’
 
-DATA_TYPE -> PRIM_DATA_TYPE | PRIM_DATA_TYPE ‘[]’
-
-PRIM_DATA_TYPE -> ‘int’ | ‘float’ | ‘string’ | ‘char’ 
+LAMBDA_INVOKE -> LAMBDA ‘(’ ACTUAL_PARAM_LIST ‘)’
 
 
 Regular Expressions
 -------------------
 
-LETTER = ( 'a'..'z' + ‘_’ )
+LETTER = ( ‘a‘..‘z‘ + ‘_’ )
 
 DIGIT = ( ‘0’..‘9’ )
 
@@ -113,5 +115,3 @@ FLOAT = (‘+’ + ‘-‘ + e ) DIGIT+ ( ( ‘.’ DIGIT+) + e ) ( (‘E’ (�
     e ) DIGIT+) + e)
 
 STRING = ‘ ” ’ any unicode character(s) ‘ “ ’
-
-CHARACTER = ‘ ‘ ’ any unicode character ‘ ‘ ’
