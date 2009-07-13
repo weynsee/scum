@@ -1,17 +1,25 @@
 package scum.lang;
 
+import java.io.IOException;
+import java.io.Reader;
+
 public class Lexer {
 
     private final LexerState lexer;
 
-    public Lexer(final String characters) {
-	this.lexer = new LexerState(characters);
+    public Lexer(final Reader reader) {
+	this.lexer = new LexerState(reader);
     }
 
     public String scan() {
 	StringBuilder token = new StringBuilder();
-	for (StateMachine state = StateMachine.START; state != StateMachine.END
-		&& !lexer.isEof(); state = state.next(lexer, token)) {
+	// for (StateMachine state = StateMachine.START; state !=
+	// StateMachine.END
+	// && !lexer.isEof(); state = state.next(lexer, token)) {
+	// }
+	StateMachine state = StateMachine.START;
+	while (state != StateMachine.END && !lexer.isEof()) {
+	    state = state.next(lexer, token);
 	}
 	CompilerContext.setCurrentLineNumber(lexer.currentLineNumber());
 	return token.toString();
@@ -71,16 +79,28 @@ public class Lexer {
     }
 
     private static class LexerState {
-	private final String characters;
-	private int pointer;
+	private final Reader input;
 	private int lineNumber;
+	private char nextChar;
 
-	private LexerState(final String characters) {
-	    this.characters = characters;
+	private LexerState(final Reader characters) {
+	    this.input = characters;
+	    nextChar = readChar();
+	}
+
+	private char readChar() {
+	    try {
+		return (char) input.read();
+	    } catch (IOException e) {
+		// TODO: replace this with custom exception
+		throw new IllegalStateException(e);
+	    }
 	}
 
 	private char pop() {
-	    return characters.charAt(pointer++);
+	    char current = nextChar;
+	    nextChar = readChar();
+	    return current;
 	}
 
 	private void incrementLineNumber() {
@@ -92,7 +112,7 @@ public class Lexer {
 	}
 
 	private boolean isEof() {
-	    return pointer >= characters.length();
+	    return nextChar == (char) -1;
 	}
     }
 

@@ -1,5 +1,7 @@
 package scum.lang;
 
+import java.io.StringReader;
+
 import junit.framework.TestCase;
 
 import org.junit.Test;
@@ -13,8 +15,7 @@ public class LexerTest extends TestCase {
 	for (int i = 0; i < lines; i++) {
 	    code += "\n";
 	}
-	Lexer lex = new Lexer(code);
-	lex.scan();
+	Lexer lex = new Lexer(new StringReader(code));
 	lex.scan();
 	assertEquals(lines, CompilerContext.getCurrentLineNumber());
     }
